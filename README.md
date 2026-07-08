@@ -27,15 +27,19 @@ Thank you for taking the time to look through my project!
 
 ## Topology Overview
 
-![Network Topology](<img width="3691" height="2885" alt="PICTURE" src="https://github.com/user-attachments/assets/e65e856b-2fcb-4312-992b-57f998579046" />
-)
+<img width="3691" height="2885" alt="PICTURE" src="https://github.com/user-attachments/assets/fff21852-2cf7-47a7-8037-b26f934a711a" />
+
 
 The network is split into three functional layers plus a server room:
 
 - **Access Layer:** Six 2960-24TT switches, one per department (Management, HR, Marketing, IT, Accounting, R&D). Each one carries end devices, PCs, IP phones, laptops, a wireless AP, and a printer.
+<img width="2987" height="487" alt="Access Layer ONLY" src="https://github.com/user-attachments/assets/5bd5c706-0956-472f-b73d-6cf216aaa41d" />
 - **Distribution/Core Layer:** Two 3650 switches (CORE-SW1 and CORE-SW2) doing double duty as both distribution and core. They handle inter-VLAN routing, OSPF, and HSRP, and they're connected to each other with a Layer 3 EtherChannel.
 - **Router Layer:** An ISR4331 (R1) sitting between the core and the ISP router, handling PAT and advertising a default route into OSPF.
+<img width="2128" height="495" alt="Distribution + Router" src="https://github.com/user-attachments/assets/f9588af3-11cd-412d-b630-1c05ce21a975" />
 - **Server Room:** A dedicated switch hosting DHCP, DNS, FTP, Syslog, NTP, Web/Email, RADIUS/TACACS+ servers, a WLC, and a VoIP-PBX (2811 Router).
+<img width="437" height="488" alt="Server room" src="https://github.com/user-attachments/assets/c6887884-41bd-4147-8a35-8a4e6bf379d5" />
+
 
 Every access switch is dual-homed with one uplink to CORE-SW1 and one to CORE-SW2, so there's no single point of failure between an access switch and the rest of the network.
 
