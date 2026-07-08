@@ -1,0 +1,19 @@
+SSH Plan:
+
+1- A Vlan solely for management must be created, I say Vlan 500.
+2- Since there's a Vlan only for Remote management, I'd say let's assign the one laptop in the server room to be in vlan 500. (Dismissed)
+2a- But hey the Switch in the Server room can be used as our portal to the other devices.
+Well, the data goes through the Server room's switch first anyway, so let's use the switch.
+But how to implement it? Connect the laptop to the switch through the console port, login + enable passwords will be configured in the AAA server with a local login backup option to reduce security risk.
+3- The two L3 Core-switches have to become the default-gateway for this "SSH Remote connection" subnet.
+The subnet itself is 172.16.50.0/25 (126 usable IPs)		CORE-SW1: 172.16.50.1	Core-SW2: 172.16.50.2	HSRP IP: 172.16.50.3
+The First IP will be 172.16.50.10
+The HSRP group number will be 500 - Tracking will be used (G1/0/7 [The server room's switch]) - CORE-SW1's priority will be 110 - Core-SW2's priority will be 100
+
+
+I found something interesting!
+Even tho I assigned Core-SW1 & Core-SW2 Management IPs but since the AAA server is located in the 192.168.70.0/24 subnet the Core-SWitches use their Interface VLAN 70
+to send the authentication packet to the AAA server.
+So their Interface VLAN 70 IPs had to be added to the AAA server; nevertheless their management IPs are only used as the default-gateway.
+
+Maybe I should remove their management IP from the AAA server.

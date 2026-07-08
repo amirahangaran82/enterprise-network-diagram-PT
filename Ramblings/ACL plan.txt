@@ -1,0 +1,17 @@
+We need to plan on how we're going to implement ACLs in our network.
+
+First let's start with the obvious candidates:
+1- IT subnet + server room's laptop can do anything that they want, nothing is denied for them.
+2- The router's G0/0/0 will have an inbound ACL denying traffic from the internet.
+3- The 2 CORE-SWs will bear most of the ACL workload. (Especially their interface VLANs)
+4- The 2 CORE-SWs G1/0/24 interface will have an outbound ACL permitting specific subnets accessing the internet
+
+5- I have no idea what to do with the other subnets, I think I need to ask AI (Whenever the internet gets back OFC)
+
+Update after 3 months:
+Packet Tracer has bug, doesn't let me use "ip access-class" command even though it exists and it even auto-completes it for you.
+Gives ---> % Invalid input detected at '^' marker.
+
+UGHHHH!
+
+Also PT doesn't support time-exceeded and log command keywords!!!!!!!!!!!!

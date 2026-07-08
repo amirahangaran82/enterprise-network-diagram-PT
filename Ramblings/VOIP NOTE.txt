@@ -1,0 +1,2 @@
+The ports of the switches that the IP phones connect to should NOT have BPDU-Guard enabled!!!!!
+Since the IP phones work by adding Dot1Q tags to frames it will trigger the BPDU-Guard Port inconsistent error.

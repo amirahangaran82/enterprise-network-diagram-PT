@@ -1,0 +1,27 @@
+As I tried to practice how to implement WLC (Wireless Lan Controller) and LAPs (Light-weight access points),
+I've run onto some "Problems".
+Well The WLC and the LAPs' ports must be configured as trunk ports, but then I can't 
+1- Reach the WLC anymore, pinging shows destination unreachable
+2- Get the LAPs to work, if I put them in access ports with VLANs they will work but the
+users connected through them will get all their traffic blocked by STP!!!!!
+3- When LAPs are on a trunk port, they can't get an IP from the DHCP server.
+
+I have to find a solution!
+Or I'll have to use a regular AP and configure them manually.
+
+
+***********
+* Update: *
+***********
+
+I have found the solution!
+The WLC and LAPs have to be on trunk port to function properly, and to bypass the STP problem.
+But how did I make DHCP work? They will get an IP if there's a pool configured on the NATIVE VLAN!!!!!!!!!!
+For testing I made a pool + an interface vlan 1 (as default-gateway), and the LAPs easily got IP addresses! 
+And the clients got IPs based on the VLAN they're in!
+
+
+\\\Extra///
+
+For configuring login using RADIUS, don't forget that Packet Tracer only uses the old 1645 port not the 1812/1813 new ports!
+And you only need to add the WLC's IP address to the RADIUS server.

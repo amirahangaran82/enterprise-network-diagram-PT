@@ -1,0 +1,8 @@
+NTP Notes:
+
+While practicing configuring NTP before implementing it in the portfolio, I've noticed some things about it.
+1- It takes exactly 5 minutes for Cisco equipment to actually reach out to the provided NTP server and update their clock and calender.
+2- If a router (or anything) is going to be both a NTP client and server (master), first configure a server and wait for 5 minutes, then configure it as a server.
+If you don't wait then it will choose its own clock and calender than the server one, and it  will render everything useless.
+3- Packet tracer does not let you configure multiple NTP servers, it's a shame because NTP is one of those things that ONE server isn't enough!
+4- After testing many times, Packet tracer has a bug that prevents you from using anything other than a literal SERVER as a ntp server, a router/l3 switch won't work for unknown reasons.
