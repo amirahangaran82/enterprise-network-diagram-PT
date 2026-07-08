@@ -1,0 +1,379 @@
+!Increasing exec timer and synchronizing logs!
+en
+conf t
+line console 0
+exec-time 0
+logging synch
+exit
+
+!Unshutting the interface and assigning an IP address for Telephony service fallback!
+!Be advised: The port on the switch must a Trunk port!
+int fa0/0
+no shut
+ip address 192.168.70.9 255.255.255.0
+speed auto
+duplex auto
+exit
+
+!Creating and configuring the SubInterfaces!
+int fa0/0.11
+no shut
+encapsulation dot1q 11
+description Default Gateway for Voice VLAN 11
+ip address 192.168.11.1 255.255.255.0
+
+int fa0/0.21
+no shut
+encapsulation dot1q 21
+description Default Gateway for Voice VLAN 21
+ip address 192.168.21.1 255.255.255.0
+
+int fa0/0.31
+no shut
+encapsulation dot1q 31
+description Default Gateway for Voice VLAN 31
+ip address 192.168.31.1 255.255.255.0
+
+int fa0/0.41
+no shut
+encapsulation dot1q 41
+description Default Gateway for Voice VLAN 41
+ip address 192.168.41.1 255.255.255.0
+
+int fa0/0.51
+no shut
+encapsulation dot1q 51
+description Default Gateway for Voice VLAN 51
+ip address 192.168.51.1 255.255.255.0
+
+int fa0/0.61
+no shut
+encapsulation dot1q 61
+description Default Gateway for Voice VLAN 61
+ip address 192.168.61.1 255.255.255.0
+
+int fa0/0.71
+no shut
+encapsulation dot1q 71
+description Default Gateway for Voice VLAN 71
+ip address 192.168.71.1 255.255.255.0
+exit
+
+!Creating dhcp pools for the different voice vlans so each phone can get an IP address (why did I explain that?)!
+ip dhcp pool vlan11
+network 192.168.11.0 255.255.255.0
+default-router 192.168.11.1
+option 150 ip 192.168.11.1
+exit
+
+ip dhcp pool vlan21
+network 192.168.21.0 255.255.255.0
+default-router 192.168.21.1
+option 150 ip 192.168.21.1
+exit
+
+ip dhcp pool vlan31
+network 192.168.31.0 255.255.255.0
+default-router 192.168.31.1
+option 150 ip 192.168.31.1
+exit
+
+ip dhcp pool vlan41
+network 192.168.41.0 255.255.255.0
+default-router 192.168.41.1
+option 150 ip 192.168.41.1
+exit
+
+ip dhcp pool vlan51
+network 192.168.51.0 255.255.255.0
+default-router 192.168.51.1
+option 150 ip 192.168.51.1
+exit
+
+ip dhcp pool vlan61
+network 192.168.61.0 255.255.255.0
+default-router 192.168.61.1
+option 150 ip 192.168.61.1
+
+ip dhcp pool vlan71
+network 192.168.71.0 255.255.255.0
+default-router 192.168.71.1
+option 150 ip 192.168.71.1
+exit
+
+!Excluding some IP addresses from the DHCP pool (the IPs assigned to the CORE-SW1 & 2)!
+ip dhcp excluded-address 192.168.11.1 192.168.11.3
+ip dhcp excluded-address 192.168.21.1 192.168.21.3
+ip dhcp excluded-address 192.168.31.1 192.168.31.3
+ip dhcp excluded-address 192.168.41.1 192.168.41.3
+ip dhcp excluded-address 192.168.51.1 192.168.51.3
+ip dhcp excluded-address 192.168.61.1 192.168.51.3
+ip dhcp excluded-address 192.168.71.1 192.168.71.3
+
+!Enabling the Telephony service, 19 phones so 19 numbers, the chosen source-address is the interface f0/0's address, port 2000 since it's the port used by Cisco IP phones!
+Telephony-service
+max-ephone 19
+max-dn 19
+ip source-address 192.168.70.9 port 2000
+exit
+
+!Assgining each ephone a mac-address so I can precisely assign each phone their respective number!
+ephone 1
+type 7960
+mac-address 00D0.580E.3C37
+exit
+
+ephone 2
+type 7960
+mac-address 0001.9724.E1E2
+exit
+
+ephone 3
+type 7960
+mac-address 0090.0C95.1BDC
+exit
+
+ephone 4
+type 7960
+mac-address 0060.5CBE.DB22
+exit
+
+ephone 5
+type 7960
+mac-address 0040.0BCB.0329
+exit
+
+ephone 6
+type 7960
+mac-address 00D0.FFAA.B18A
+exit
+
+ephone 7
+type 7960
+mac-address 0007.ECDE.A8B3
+exit
+
+ephone 8
+type 7960
+mac-address 00E0.A376.82B4
+exit
+
+ephone 9
+type 7960
+mac-address 0060.2F0C.ADAA
+exit
+
+ephone 10
+type 7960
+mac-address 00E0.F9CB.0771
+exit
+
+ephone 11
+type 7960
+mac-address 0000.0C32.1C68
+exit
+
+ephone 12
+type 7960
+mac-address 000A.F3E2.DA3B
+exit
+
+ephone 13
+type 7960
+mac-address 000D.BD57.02E9
+exit
+
+ephone 14
+type 7960
+mac-address 0001.4350.1D53
+exit
+
+ephone 15
+type 7960
+mac-address 000A.4143.2415
+exit
+
+ephone 16
+type 7960
+mac-address 00D0.D310.683B
+exit
+
+ephone 17
+type 7960
+mac-address 0005.5EC6.2DC5
+exit
+
+ephone 18
+type 7960
+mac-address 0001.638C.00D5
+exit
+
+ephone 19
+type 7960
+mac-address 0030.F263.BD61
+exit
+
+!Assignning each ephone-dn a number!
+ephone-dn 1
+number 1101
+exit
+
+ephone-dn 2
+number 1102
+exit
+
+ephone-dn 3
+number 1103
+exit
+
+ephone-dn 4
+number 2101
+exit
+
+ephone-dn 5
+number 2102
+exit
+
+ephone-dn 6
+number 2103
+exit
+
+ephone-dn 7
+number 3101
+exit
+
+ephone-dn 8
+number 3102
+exit
+
+ephone-dn 9
+number 3103
+exit
+
+ephone-dn 10
+number 4101
+exit
+
+ephone-dn 11
+number 4102
+exit
+
+ephone-dn 12
+number 4103
+exit
+
+ephone-dn 13
+number 5101
+exit
+
+ephone-dn 14
+number 5102
+exit
+
+ephone-dn 15
+number 5103
+exit
+
+ephone-dn 16
+number 6101
+exit
+
+ephone-dn 17
+number 6102
+exit
+
+ephone-dn 18
+number 6103
+exit
+
+ephone-dn 19
+number 7101
+exit
+
+!Now assignning each Ephone a button But I have to do this one command at a time while connecting a VOIP at a time so a number wouldn't get assigned to the wrong phone!
+ephone 1
+button 1:1
+exit
+
+ephone 2
+button 1:2
+exit
+
+ephone 3
+button 1:3
+exit
+
+ephone 4
+button 1:4
+exit
+
+ephone 5
+button 1:5
+exit
+
+ephone 6
+button 1:6
+exit
+
+ephone 7
+button 1:7
+exit
+
+ephone 8
+button 1:8
+exit
+
+ephone 9
+button 1:9
+exit
+
+ephone 10
+button 1:10
+exit
+
+ephone 11
+button 1:11
+exit
+
+ephone 12
+button 1:12
+exit
+
+ephone 13
+button 1:13
+exit
+
+ephone 14
+button 1:14
+exit
+
+ephone 15
+button 1:15
+exit
+
+ephone 16
+button 1:16
+exit
+
+ephone 17
+button 1:17
+exit
+
+ephone 18
+button 1:18
+exit
+
+ephone 19
+button 1:19
+exit
+
+!Configuring a default gateway!
+ip route 0.0.0.0 0.0.0.0 192.168.71.2
+ip route 0.0.0.0 0.0.0.0 192.168.71.3
+
+!Configuring NTP server!
+ntp update-calendar
+ntp server 192.168.70.5
+exit
+
+

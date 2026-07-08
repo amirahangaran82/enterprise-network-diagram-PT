@@ -1,0 +1,209 @@
+!Increasing exec timer and synchronizing logs!
+en
+conf t
+line console 0
+exec-time 0
+logging synch
+exit
+
+!changing the native VLAN from 1 to 93!
+vlan 93
+exit
+int range fa0/1 - 24
+switchport trunk native vlan 93
+int range g0/1 - 2
+switchport trunk native vlan 93
+exit
+
+!spanning-tree settings (RSTP + portfast default on access ports + bpduguard default on portfast ports)!
+spanning-tree mode rapid-pvst
+spanning-tree portfast default
+spanning-tree portfast bpduguard default
+
+!Disabling VTP since it's more of a hassle than a helping hand!
+vtp mode transparent
+
+!Configuring VLANs!
+vlan 10
+name Management
+vlan 20
+name HR
+vlan 30
+name Marketing
+vlan 40
+name IT
+vlan 50
+name Accounting
+vlan 60
+name R&D
+vlan 70
+name SERVER-ROOM
+exit
+
+!Configuring Voice VLANs!
+vlan 11
+name VOIP-for-Management
+vlan 21
+name VOIP-for-HR
+vlan 31
+name VOIP-for-Marketing
+vlan 41
+name VOIP-for-IT
+vlan 51
+name VOIP-for-Accounting
+vlan 61
+name VOIP-for-R&D
+vlan 71
+name VOIP-for-Server-Room
+exit
+
+!Making a Message of The Day banner!
+banner motd %
+###############################################################################
+Abandon all hope ye who enter here!
+
+Also, everything is being logged so your possible recklessness will be noticed.
+
+If you aren't one of the IT guys or the poor helpdesks, GET OUT, please.
+
+When in doubt call the IT department!
+###############################################################################
+%
+
+line vty 0 15
+motd-banner
+exit
+
+line console 0
+motd-banner
+exit
+
+!Creating a VLAN for remote management only (since this switch is located inside the server-room there's no need to enable SSH login, console port will be enough)!
+vlan 500
+name Remote-Management
+int vlan 500
+no shut
+ip address 172.16.50.17 255.255.255.0
+exit
+
+line vty 0 15
+transport input none
+exit
+
+!Configuring a default-gateway for the switch!
+ip default-gateway 172.16.50.3
+
+!Configuring a local username + password for console login!
+username AdMiN privilege 15 secret this1passwordisquitehardtotype
+
+!Configuring Console port local login!
+line console 0
+login local
+exit
+
+!Enable password!
+enable secret opensesame
+
+!Assignning IP for a Syslog server!
+logging console
+logging on 
+logging 192.168.70.8
+!I wanted to specify level 5 and below alerts to be sent to the syslog server but Packet Tracer only supports the debugging option!
+logging trap debugging
+service timestamps log datetime msec
+
+!Enabling LLDP!
+lldp run
+
+!Configuring a NTP server!
+ntp server 192.168.70.5
+ntp update-calendar
+
+!Configuring the Ports leading to Servers!
+int fa0/1
+description Connects to Laptop13 + IP Phone 19
+switchport mode access
+switchport access vlan 70
+switchport voice vlan 71
+no spanning-tree bpduguard
+duplex auto
+speed auto
+no shut
+exit
+
+int fa0/2
+description Connects to NTP & DHCP server
+switchport mode access
+switchport access vlan 70
+duplex auto
+speed auto
+no shut 
+exit
+
+int fa0/3
+description Connects to WEB & EMAIL server
+switchport mode access
+switchport access vlan 70
+duplex auto
+speed auto
+no shut
+exit
+
+int fa0/4
+description Connects to RADIUS & TACACS server
+switchport mode access
+switchport access vlan 70
+duplex auto
+speed auto
+no shut
+exit
+
+int fa0/5
+description Connects to DNS & FTP & SYSLOG server
+switchport mode access
+switchport access vlan 70
+duplex auto
+speed auto
+no shut
+exit
+
+int fa0/6
+description Connects to VOIP-PBX
+switchport mode trunk
+duplex auto
+speed auto
+no shut
+exit
+
+int fa0/7
+description Connects to WLC
+switchport mode trunk
+switchport trunk native vlan 70
+duplex auto
+speed auto
+no shut
+exit
+
+!Configuring the Trunk ports connecting to the CORE-Switches!
+int range g0/1 - 2
+switchport mode trunk
+speed auto
+duplex auto
+no shut
+exit
+
+int g0/1
+description Connects to CORE-SW1
+
+int g0/2
+description Connects to CORE-SW2
+exit
+
+!Configuring Guest VLAN!
+vlan 100
+name GUEST-VLAN
+exit
+
+!adding the DNS server's IP!
+ip name-server 192.168.70.8
+
