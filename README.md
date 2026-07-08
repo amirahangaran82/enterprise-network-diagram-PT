@@ -23,7 +23,7 @@ Thank you for taking the time to look through my project!
 - [Lessons Learned / Packet Tracer Quirks](#lessons-learned--packet-tracer-quirks)
 - [Known Limitations / Roadmap](#known-limitations--roadmap)
 - [Tools Used](#tools-used)
-- [Screenshot from Packet Tracer](#packet-tracer-screenshot)
+- [Screenshot from Packet Tracer](#screenshot-from-packet-tracer)
 
 ## Topology Overview
 <img width="3555" height="991" alt="Overview" src="https://github.com/user-attachments/assets/4db483b3-14b8-47af-a391-2b2a3638df66" />
@@ -254,4 +254,5 @@ Being upfront about what isn't finished, or isn't fully enforceable in Packet Tr
 - Microsoft Visio
 
 ## Screenshot from Packet Tracer
-<img width="3691" height="2885" alt="PT-ScreenShot" src="https://github.com/user-attachments/assets/013e45b4-ffba-4558-a7be-ff096d8a9ec6" />
+<img width="3691" height="2885" alt="PT-ScreenShot" src="https://github.com/user-attachments/assets/084c35cb-0480-4f90-8c3e-3b4c4e16d2a3" />
+
