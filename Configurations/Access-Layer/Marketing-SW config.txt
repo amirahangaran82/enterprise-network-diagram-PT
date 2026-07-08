@@ -1,0 +1,285 @@
+!Increasing exec timer and synchronizing logs!
+en
+conf t
+line console 0
+exec-time 0
+logging synch
+exit
+
+!changing the native VLAN from 1 to 93!
+vlan 93
+exit
+int range fa0/1 - 24
+switchport trunk native vlan 93
+int range g0/1 - 2
+switchport trunk native vlan 93
+exit
+
+!spanning-tree settings (RSTP + portfast default on access ports + bpduguard default on portfast ports)!
+spanning-tree mode rapid-pvst
+spanning-tree portfast default
+spanning-tree portfast bpduguard default
+
+!Disabling VTP since it's more of a hassle than a helping hand!
+vtp mode transparent
+
+!Configuring VLANs!
+vlan 10
+name Management
+vlan 20
+name HR
+vlan 30
+name Marketing
+vlan 40
+name IT
+vlan 50
+name Accounting
+vlan 60
+name R&D
+vlan 70
+name SERVER-ROOM
+exit
+
+!Configuring Voice VLANs!
+vlan 11
+name VOIP-for-Management
+vlan 21
+name VOIP-for-HR
+vlan 31
+name VOIP-for-Marketing
+vlan 41
+name VOIP-for-IT
+vlan 51
+name VOIP-for-Accounting
+vlan 61
+name VOIP-for-R&D
+vlan 71
+name VOIP-for-Server-Room
+exit
+
+!Enabling DHCP snooping + rate limit on untrusted ports + Disabling DHCP option 82 since this is NOT a DHCP relay device!
+ip dhcp snooping
+ip dhcp snooping vlan 10-71
+ip dhcp snooping vlan 100
+no ip dhcp snooping information option
+ip dhcp snooping verify mac-address
+
+!Cisco recommends a rate limit of 100 packets per second!
+int range fa0/1 - 24
+ip dhcp snooping limit rate 100
+exit
+
+int range g0/1 - 2
+ip dhcp snooping trust
+exit
+
+no ip dhcp snooping information option
+
+!Enabling DAI!
+ip arp inspection
+ip arp inspection vlan 10-71
+ip arp inspection vlan 100
+ip arp inspection validate src-mac
+
+int range g0/1 - 2
+ip arp inspection trust
+exit
+
+!Making a Message of The Day banner!
+banner motd %
+###############################################################################
+Abandon all hope ye who enter here!
+
+Also, everything is being logged so your possible recklessness will be noticed.
+
+If you aren't one of the IT guys or the poor helpdesks, GET OUT, please.
+
+When in doubt call the IT department!
+###############################################################################
+%
+
+line vty 0 15
+motd-banner
+exit
+
+line console 0
+motd-banner
+exit
+
+!Creating a VLAN for remote management only!
+vlan 500
+name Remote-Management
+int vlan 500
+no shut
+ip address 172.16.50.12 255.255.255.128
+exit
+
+!Configuring a default-gateway for the switch!
+ip default-gateway 172.16.50.3
+
+!Configuring AAA (TACACS+) login!
+aaa new-model
+aaa authentication login ssh-login group tacacs+ local-case
+tacacs-server host 192.168.70.7
+tacacs-server key 3this3floor3sucks
+
+!Enabling SSH!
+ip domain name company.com
+crypto key generate rsa
+1024
+
+ip ssh version 2
+ip ssh time-out 90
+ip ssh authentication-retries 3
+
+line vty 0 15
+transport input none
+transport input ssh
+login authentication ssh-login
+exit
+
+!Configuring a local username + password for emergency cases in which the AAA dies!
+username AdMiN privilege 15 secret this1passwordisquitehardtotype
+
+!Configuring Console port local login!
+aaa authentication login console-port local-case
+line console 0
+login authentication console-port
+exit
+
+!Configuring AAA (TACACS+) enable password!
+aaa authentication enable default group tacacs+ enable
+
+!Enable password!
+enable secret opensesame
+
+!Assignning IP for a Syslog server!
+logging console
+logging on 
+logging 192.168.70.8
+!I wanted to specify level 5 and below alerts to be sent to the syslog server but Packet Tracer only supports the debugging option!
+logging trap debugging
+service timestamps log datetime msec
+
+!Enabling LLDP!
+lldp run
+
+!Configuring a NTP server!
+ntp server 192.168.70.5
+ntp update-calender
+
+!LAP port configuration, I need to override the native VLAN setting so the LAP can get the correct IP address belonging to the correct subnet from the DHCP server!
+int fa0/2
+description Connects to the LAP
+switchport mode trunk
+switchport trunk native vlan 30
+speed auto
+duplex auto
+no shut
+exit
+
+!Configuring the access ports!
+!Ports connecting to VOIP phones trigger BPDUGuard, so I had to disable BPDUGuard!
+int fa0/1
+description Connects to PC3 + IP Phone 7
+switchport mode access
+switchport access vlan 30
+switchport voice vlan 31
+no spanning-tree bpduguard
+speed auto
+duplex auto
+no shut
+exit
+
+int fa0/3
+description Connects to IP Phone 8 (Belongs to Laptop5)
+switchport mode access
+switchport voice vlan 31
+no spanning-tree bpduguard
+speed auto
+duplex auto
+no shut
+exit
+
+int fa0/4
+description Connects to IP Phone 9 (Belongs to Laptop6)
+switchport mode access
+switchport voice vlan 31
+no spanning-tree bpduguard
+speed auto
+duplex auto
+no shut
+exit
+
+int fa0/5
+description Connects to Printer 3
+switchport mode access
+switchport access vlan 30
+speed auto
+duplex auto
+no shut
+exit
+
+!Configuring Trunk Ports connecting to the Core-Switches!
+int range g0/1 - 2
+switchport mode trunk
+speed auto
+duplex auto
+no shut
+exit
+
+int g0/1
+description Connects to CORE-SW1
+
+int g0/2
+description Connects to CORE-SW2
+exit
+
+!Configuring Guest VLAN!
+vlan 100
+name GUEST-VLAN
+exit
+
+!adding the DNS server's IP!
+ip name-server 192.168.70.8
+
+
+!Configure a BlackHole VLAN for unused ports + assign unused ports to this VLAN + remove the BlackHole VLAN from the list of allowed trunk port VLANs!
+!Shutdown unused ports + make them Access ports for added security!
+
+vlan 999
+name BLACK_HOLE
+exit
+
+int range fa0/6 - 24
+switchport mode access
+switchport access vlan 999
+shut
+
+int range fa0/1 - 24
+switchport trunk allowed vlan except 999
+
+int range g0/1 - 2
+switchport trunk allowed vlan except 999
+exit
+
+
+!Change the default behavior DTP so they won't Negotiate anymore for security!
+int range fa0/1 - 24
+switchport nonegotiate
+
+int range g0/1 - 2
+switchport nonegotiate
+exit
+
+!Configure a standard ACL so only IT and Server-Room can SSH!
+access-list 10 permit 192.168.40.0 0.0.0.255
+ip access-list standard 10
+20 permit 192.168.70.0 0.0.0.255
+30 deny any
+remark Only IT and Server's IPs can SSH
+exit
+
+line vty 0 15
+ip access-class 10 in
+exit
