@@ -1,0 +1,428 @@
+!Increasing exec timer and synchronizing logs!
+en
+conf t
+line console 0
+exec-time 0
+logging synch
+exit
+
+!changing the native VLAN from 1 to 93!
+vlan 93
+exit
+int range g1/0/1 - 24
+switchport trunk native vlan 93
+int range g1/1/1 - 4
+switchport trunk native vlan 93
+exit
+
+!Spanning-tree settings (RSTP + assigning root and backup root switches for Load-Balancing)!
+spanning-tree mode rapid-pvst
+spanning-tree vlan 10-30 priority 4096
+spanning-tree vlan 40-60 priority 0
+spanning-tree vlan 93 priority 4096
+spanning-tree vlan 70 priority 4096
+spanning-tree vlan 100 priority 4096
+
+!Disabling VTP since it's more of a hassle than a helping hand!
+vtp mode transparent
+
+!Enabling IP routing!
+ip routing
+
+!Configuring VLANs!
+vlan 10
+name Management
+vlan 20
+name HR
+vlan 30
+name Marketing
+vlan 40
+name IT
+vlan 50
+name Accounting
+vlan 60
+name R&D
+vlan 70
+name SERVER-ROOM
+exit
+
+!Configuring Voice VLANs!
+vlan 11
+name VOIP-for-Management
+vlan 21
+name VOIP-for-HR
+vlan 31
+name VOIP-for-Marketing
+vlan 41
+name VOIP-for-IT
+vlan 51
+name VOIP-for-Accounting
+vlan 61
+name VOIP-for-R&D
+vlan 71
+name VOIP-for-Server-Room
+exit
+
+!Configuring IP-helper for voice vlan interfaces!
+int vlan 11
+no shut
+ip address 192.168.11.3 255.255.255.0
+ip helper-address 192.168.11.1
+
+int vlan 21
+no shut
+ip address 192.168.21.3 255.255.255.0
+ip helper-address 192.168.21.1
+
+int vlan 31
+no shut
+ip address 192.168.31.3 255.255.255.0
+ip helper-address 192.168.31.1
+
+int vlan 41
+no shut
+ip address 192.168.41.3 255.255.255.0
+ip helper-address 192.168.41.1
+
+int vlan 51
+no shut
+ip address 192.168.51.3 255.255.255.0
+ip helper-address 192.168.51.1
+
+int vlan 61
+no shut
+ip address 192.168.61.3 255.255.255.0
+ip helper-address 192.168.61.1
+
+int vlan 71
+no shut
+ip address 192.168.71.3 255.255.255.0
+ip helper-address 192.168.71.1
+exit
+
+!Configuring an IP route to the VOIP-PBX (Useless,)!
+ip route 192.168.71.0 255.255.255.0 192.168.71.1
+
+
+!Configuring Interface VLANs + IP helper!
+!This switch is the Back-up default-gateway for VLANs 10 till 30!
+Interface vlan 10
+ip address 192.168.10.2 255.255.255.0
+no shut
+ip helper-address 192.168.70.5
+
+interface vlan 20
+ip address 192.168.20.2 255.255.255.0
+no shut
+ip helper-address 192.168.70.5
+
+interface vlan 30
+ip address 192.168.30.2 255.255.255.0
+no shut
+ip helper-address 192.168.70.5
+
+!This switch is the main default-gateway for VLANs 40 till 60!
+interface vlan 40
+ip address 192.168.40.1 255.255.255.0
+no shut
+ip helper-address 192.168.70.5
+
+interface vlan 50
+ip address 192.168.50.1 255.255.255.0
+no shut
+ip helper-address 192.168.70.5
+
+interface vlan 60
+ip address 192.168.60.1 255.255.255.0
+no shut
+ip helper-address 192.168.70.5
+
+!Back-up for this one specific VLAN!
+interface vlan 70
+ip address 192.168.70.2 255.255.255.0
+no shut
+exit
+
+!Configuring HSRP + Different HSRP Groups for Load-Balancing!
+!This switch is the Passive/Standby HSRP Switch for VLANs 10 to 30!
+int vlan 10
+standby version 2
+standby 10 ip 192.168.10.3
+standby 10 priority 100
+standby 10 track g1/0/24
+standby 10 preempt
+
+int vlan 20
+standby version 2
+standby 20 ip 192.168.20.3
+standby 20 priority 100
+standby 20 track g1/0/24
+standby 20 preempt
+
+int vlan 30
+standby version 2
+standby 30 ip 192.168.30.3
+standby 30 priority 100
+standby 30 track g1/0/24
+standby 30 preempt
+
+!This switch is the Active HSRP Switch for VLANs 40 to 60!
+int vlan 40
+standby version 2
+standby 40 ip 192.168.40.3
+standby 40 priority 110
+standby 40 track g1/0/24
+standby 40 preempt
+
+int vlan 50
+standby version 2
+standby 50 ip 192.168.50.3
+standby 50 priority 110
+standby 50 track g1/0/24
+standby 50 preempt
+
+int vlan 60
+standby version 2
+standby 60 ip 192.168.60.3
+standby 60 priority 110
+standby 60 track g1/0/24
+standby 60 preempt
+
+!Passive/Standby for this one specific VLAN!
+int vlan 70
+standby version 2
+standby 70 ip 192.168.70.3
+standby 70 priority 100
+standby 70 track g1/0/24
+standby 70 preempt
+exit
+
+!Making a Message of The Day banner!
+banner motd %
+###############################################################################
+Abandon all hope ye who enter here!
+
+Also, everything is being logged so your possible recklessness will be noticed.
+
+If you aren't one of the IT guys or the poor helpdesks, GET OUT, please.
+
+When in doubt call the IT department!
+###############################################################################
+%
+
+line vty 0 15
+motd-banner
+exit
+
+line console 0
+motd-banner
+exit
+
+!Creating a VLAN for remote management only + an IP + HSRP Group!
+vlan 500
+name Remote-Management
+int vlan 500
+no shut
+ip address 172.16.50.2 255.255.255.128
+standby version 2
+standby 500 ip 172.16.50.3
+standby 500 preempt
+standby 500 track g1/0/7
+standby 500 priority 100
+exit
+
+!Configuring AAA (TACACS+) login!
+aaa new-model
+aaa authentication login ssh-login group tacacs+ local-case
+
+tacacs-server host 192.168.70.7
+tacacs-server key 0@thisisbackup@0
+
+!Enabling SSH!
+ip domain name company.com
+crypto key generate rsa
+1024
+ip ssh version 2
+ip ssh time-out 90
+ip ssh authentication-retries 3
+
+line vty 0 15
+transport input none
+transport input ssh
+login authentication ssh-login
+exit
+
+!Configuring a local username + password for emergency cases in which the AAA dies (Also There's the bug that breaks AAA on L3 switches)!
+username admin privilege 15 secret admin
+
+!Configuring Console port local login!
+aaa authentication login console-port local-case
+line console 0
+login authentication console-port
+exit
+
+!Configuring AAA (TACACS+) enable password!
+aaa authentication enable default group tacacs+ enable
+
+!Enable password!
+enable secret opensesame
+
+!Configuring a L3 Etherchannel between the two 3650 switches, Since it's a L3 EtherChannel I have to first configure the Port-Channel Interface!
+int po1
+no switchport
+description Load-Balancing_EtherChannel
+exit
+
+int range g1/1/1 - 2
+no switchport
+channel-group 1 mode active
+exit
+
+int po1
+ip address 172.16.50.130 255.255.255.252
+no shut
+exit
+
+port-channel load-balance src-dst-ip
+
+!Assignning IP for a Syslog server!
+logging console
+logging on 
+logging 192.168.70.8
+!I wanted to specify level 5 and below alerts to be sent to the syslog server but Packet Tracer only supports the debugging option!
+logging trap debugging
+service timestamps log datetime msec
+
+!Enabling LLDP!
+lldp run
+
+!Configuring a NTP server!
+ntp server 192.168.70.5
+ntp update-calendar
+
+!Allocate IP address to the interface that connect to R1!
+int g1/0/24
+no switchport
+description Connects to R1
+no shut
+ip address 192.168.255.6 255.255.255.252
+speed auto
+duplex auto
+exit
+
+!Configuring OSPF + changing the reference value to 10G + passive ports + Setting the network type is P-t-P!
+!Since the 'default-information originate' command has been entered so there's no need to configure a default-gateway manually!
+router ospf 1
+router-id 2.2.2.2
+network 192.168.0.0 0.0.255.255 area 0
+network 172.16.50.0 0.0.0.127 area 0
+network 172.16.50.128 0.0.0.3 area 0
+
+auto-cost reference-bandwidth 10000
+
+passive-interface vlan 10
+passive-interface vlan 20
+passive-interface vlan 30
+passive-interface vlan 40
+passive-interface vlan 50
+passive-interface vlan 60
+passive-interface vlan 70
+passive-interface vlan 11
+passive-interface vlan 21
+passive-interface vlan 31
+passive-interface vlan 41
+passive-interface vlan 51
+passive-interface vlan 61
+passive-interface vlan 71
+exit
+
+int g1/0/24
+ip ospf network point-to-point
+exit
+
+!in packet tracer you CAN'T change the OSPF network type of Interface VLANs!
+int vlan 500
+ip ospf network point-to-point
+exit
+
+!Turning the switchports that connect to Access switches in trunk mode!
+int range g1/0/1 - 7
+switchport mode trunk
+speed auto
+duplex auto
+exit
+
+!Configuring Guest VLAN + Interface VLAN + IP!
+vlan 100
+name GUEST-VLAN
+exit
+
+interface vlan 100
+description Default-Gateway for the Guest VLAN
+ip address 192.168.100.2 255.255.255.0
+ip helper-address 192.168.70.5
+no shut
+
+standby version 2
+standby 100 ip 192.168.100.3
+standby 100 preempt
+standby 100 track g1/0/24
+standby 100 priority 100
+exit
+
+!adding the guest vlan to the OSPF passive interfaces!
+router ospf 1
+passive-interface vlan 100
+exit
+
+!adding the DNS server's IP!
+ip name-server 192.168.70.8
+
+
+!Configure a BlackHole VLAN for unused ports + assign unused ports to this VLAN + remove the BlackHole VLAN from the list of allowed trunk port VLANs!
+!Shutdown unused ports + make them Access ports for added security!
+
+vlan 999
+name BLACK_HOLE
+
+int range g1/0/8 - 23
+switchport mode access
+switchport access vlan 999
+shut
+
+int range g1/0/1 - 23
+switchport trunk allowed vlan except 999
+exit
+
+!Change the default behavior DTP so they won't Negotiate anymore for security!
+!The range is till interface 23 because 24 is a routed port and IOS won't allow the 'range' command to mix between switchport and routed ports!
+int range g1/0/1 - 23
+switchport nonegotiate
+exit
+
+!Configure a standard ACL so only IT and Server-Room can SSH!
+access-list 10 permit 192.168.40.0 0.0.0.255
+ip access-list standard 10
+20 permit 192.168.70.0 0.0.0.255
+30 deny any
+remark Only IT and Server's IPs can SSH
+exit
+
+line vty 0 15
+ip access-class 10 in
+exit
+
+
+!Configuring Extended ACL for Guest VLAN!
+ip access-list extended guest_vlan
+remark Guests can only use the DNS server and access the internet anything else is DENIED
+10 permit tcp 192.168.100.0 0.0.0.255 host 192.168.70.8 eq 53
+11 permit udp 192.168.100.0 0.0.0.255 host 192.168.70.8 eq 53
+20 deny ip 192.168.100.0 0.0.0.255 192.168.0.0 0.0.255.255
+30 deny ip 192.168.100.0 0.0.0.255 172.16.50.0 0.0.0.127
+40 permit ip 192.168.100.0 0.0.0.255 any
+exit
+
+int vlan 100
+ip access-group guest_vlan in
+exit

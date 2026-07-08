@@ -1,0 +1,23 @@
+!!
+
+en
+conf t
+line console 0
+logging synch
+exec-time 0
+exit
+
+int g0/0/0
+description Connects to R1
+ip address 5.239.0.253 255.255.255.252
+no shut
+exit
+
+int lo1
+description Pretend this is Google's DNS server
+ip address 8.8.8.8 255.255.255.255
+no shut
+exit
+
+!Adding this route so pings can work!
+ip route 0.0.0.0 0.0.0.0 5.239.0.254

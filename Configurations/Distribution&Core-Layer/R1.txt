@@ -1,0 +1,170 @@
+!Increasing Exec-timer + synchronizing Logs!
+en
+conf t
+line console 0
+logging synch
+exec-time 0
+exit
+
+!Allocating IP address to the interfaces that face the L3 switches!
+int g0/0/1
+description connects to CORE-SW1
+no shut
+ip address 192.168.255.1 255.255.255.252
+exit
+
+int g0/0/2
+description connects to CORE-SW2
+no shut
+ip address 192.168.255.5 255.255.255.252
+exit
+
+!Configuring a MOTD banner!
+banner motd %
+###############################################################################
+Abandon all hope ye who enter here!
+
+Also, everything is being logged so your possible recklessness will be noticed.
+
+If you aren't one of the IT guys or the poor helpdesks, GET OUT, please.
+
+When in doubt call the IT department!
+###############################################################################
+%
+
+line vty 0 15
+motd-banner
+exit
+
+line console 0
+motd-banner
+exit
+
+!Configuring AAA (TACACS+) login!
+aaa new-model
+aaa authentication login ssh-login group tacacs+ local-case
+tacacs-server host 192.168.70.7
+tacacs-server key $default-gateway$
+
+!Configuring a local username + password for emergency cases in which the AAA dies!
+username AdMiN privilege 15 secret this1passwordisquitehardtotype
+
+!Configuring SSH access + Loopback interface!
+ip domain name company.com
+crypto key generate rsa
+1024
+
+ip ssh version 2
+ip ssh authentication-retries 3
+ip ssh time-out 90
+
+line vty 0 15
+transport input none
+transport input ssh
+login authentication ssh-login
+exit
+
+int loopback 1
+description Remote-Management
+ip address 172.16.50.16 255.255.255.128
+no shut
+exit
+
+!Configuring Console port local login!
+aaa authentication login console-port local-case
+line console 0
+login authentication console-port
+exit
+
+!Configuring AAA (TACACS+) enable password!
+aaa authentication enable default group tacacs+ enable
+
+!Enable password!
+enable secret opensesame
+
+!Assignning IP for a Syslog server!
+logging on 
+logging 192.168.70.8
+!I wanted to specify level 5 and below alerts to be sent to the syslog server but Packet Tracer only supports the debugging option!
+logging trap debugging
+service timestamps log datetime msec
+
+!Enabling LLDP!
+lldp run
+
+!Configuring a NTP server!
+ntp server 192.168.70.5
+ntp update-calendar
+
+!Configuring an IP address for the interface facing the ISP-Router + Default gateway!
+int g0/0/0
+description connects to ISP-Router
+ip address 5.239.0.254 255.255.255.252
+no shut
+exit
+
+ip route 0.0.0.0 0.0.0.0 5.239.0.253
+
+!Configuring OSPF + advertising default gateway to the L3 switches + changing the reference value to 10G + Setting the network type is P-t-P!
+router ospf 1
+router-id 3.3.3.3
+network 192.168.0.0 0.0.255.255 area 0
+network 172.16.50.0 0.0.0.127 area 0
+default-information originate
+auto-cost reference-bandwidth 10000
+exit
+
+int range g0/0/1 - 2
+ip ospf network point-to-point
+exit
+
+
+!Configuring PAT + making it use the Router's Interface IP!
+ip access-list standard PAT
+remark This acl matches everyone from INSIDE the network
+10 permit 192.168.0.0 0.0.255.255
+exit
+
+int g0/0/0
+ip nat outside
+
+int range g0/0/1 - 2
+ip nat inside
+exit
+
+ip nat inside source list PAT interface g0/0/0 overload
+
+!Configure a standard ACL so only IT and Server-Room can SSH!
+access-list 10 permit 192.168.40.0 0.0.0.255
+ip access-list standard 10
+20 permit 192.168.70.0 0.0.0.255
+30 deny any
+remark Only IT and Server's IPs can SSH
+exit
+
+line vty 0 15
+ip access-class 10 in
+exit
+
+
+!Configuring Extended ACL for blocking traffic coming from OUTSIDE!
+ip access-list extended block_outside
+remark no traffic from the internet shall pass
+10 deny ip 192.168.0.0 0.0.255.255 any
+20 deny ip 172.16.0.0 0.15.255.255 any
+30 deny ip 10.0.0.0 0.255.255.255 any
+40 deny ip 127.0.0.0 0.255.255.255 any
+
+remark allow only replies to connections from INSIDE
+50 permit icmp any any echo-reply
+60 permit icmp any any unreachable
+70 permit icmp any any time-exceeded
+80 permit tcp any any established
+
+remark deny and log everything else trying to get in
+90 deny ip any any log
+exit
+
+int g0/0/0
+ip access-group block_outside in
+exit
