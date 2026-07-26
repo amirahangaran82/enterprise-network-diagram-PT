@@ -1,3 +1,7 @@
+<p align="center">
+  <a href="README.md"><img src="https://img.shields.io/badge/🇬🇧-English-blue?style=for-the-badge"></a>
+  <a href="README.fa.md"><img src="https://img.shields.io/badge/🇮🇷-فارسی-green?style=for-the-badge"></a>
+</p>
 # Enterprise Campus Network - Cisco Packet Tracer Project
 
 An enterprise network build in Cisco Packet Tracer, covering six departments, a server farm, VoIP, wireless, and a two-tier collapsed core with redundancy baked into almost every layer.
