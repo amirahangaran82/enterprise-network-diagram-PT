@@ -1,6 +1,6 @@
 <p align="center">
   <a href="README.md"><img src="https://img.shields.io/badge/🇬🇧-English-blue?style=for-the-badge"></a>
-  <a href="README.fa.md"><img src="https://img.shields.io/badge/🇮🇷-فارسی-green?style=for-the-badge"></a>
+  <a href="README.fa.md"><img src="https://img.shields.io/badge/🇮🇷-Farsi-green?style=for-the-badge"></a>
 </p>
 # Enterprise Campus Network - Cisco Packet Tracer Project
 
